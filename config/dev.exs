@@ -65,6 +65,29 @@ config :example, ExampleWeb.Endpoint,
 # Enable dev routes for dashboard and mailbox
 config :example, dev_routes: true
 
+config :example, debug_authentication_failures?: true
+config :ash_graphql, :policies, show_policy_breakdowns?: true
+
+config :example, Example.Accounts, [
+  graphql: [
+    show_raised_errors?: true
+  ]
+]
+
+config :spark, :formatter,
+  remove_parens?: true,
+  "Ash.Resource": [
+    type: Ash.Resource,
+    section_order: [
+      :authentication,
+      :token,
+      :attributes,
+      :relationships,
+      :policies,
+      :postgres
+    ]
+  ]
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 

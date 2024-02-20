@@ -1,5 +1,6 @@
 defmodule ExampleWeb.Router do
   use ExampleWeb, :router
+  use AshAuthentication.Phoenix.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -8,10 +9,17 @@ defmodule ExampleWeb.Router do
     plug :put_root_layout, html: {ExampleWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :load_from_session
   end
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :load_from_bearer
+    plug AshGraphql.Plug
+  end
+
+  pipeline :api_restrict do
+    plug :user_authorized
   end
 
   scope "/", ExampleWeb do
@@ -21,9 +29,11 @@ defmodule ExampleWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", ExampleWeb do
-  #   pipe_through :api
-  # end
+  scope "/api/v1" do
+    pipe_through [:api]
+
+    forward "/gql", Absinthe.Plug, schema: Example.Schema
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:example, :dev_routes) do
@@ -39,6 +49,19 @@ defmodule ExampleWeb.Router do
 
       live_dashboard "/dashboard", metrics: ExampleWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
+
+  # tiny plug to process load_from_bearer's plug result
+  defp user_authorized(conn, _opts) do
+    if Map.get(conn.assigns, :current_user, false) do
+      conn
+    else
+      conn
+      |> put_status(401) # Unauthorized
+      |> put_resp_header("content-type", "application/json")
+      |> send_resp(401, "Unauthorized")
+      |> halt()
     end
   end
 end

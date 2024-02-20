@@ -22,6 +22,19 @@ config :example, ExampleWeb.Endpoint,
   pubsub_server: Example.PubSub,
   live_view: [signing_salt: "Zh1Pmmsj"]
 
+config :example,
+ash_apis: [Example.Accounts]
+
+config :example,
+  ecto_repos: [Example.Repo]
+
+config :elixir, :time_zone_database, TimeZoneInfo.TimeZoneDatabase
+
+config :ash_graphql, :default_managed_relationship_type_name_template, :action_name
+config :ash_graphql, :allow_non_null_mutation_arguments?, true
+
+config :ash, :utc_datetime_type, :datetime
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
